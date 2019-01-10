@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace NGeoHash
 {
@@ -47,7 +48,7 @@ namespace NGeoHash
          */
         public static string Encode(double latitude, double longitude, int numberOfChars = 9)
         {
-            var chars = new List<char>();
+            var chars = new StringBuilder();
             var bits = 0;
             var bitsTotal = 0;
             var hashValue = 0;
@@ -55,7 +56,7 @@ namespace NGeoHash
             var minLat = -90D;
             var maxLon = 180D;
             var minLon = -180D;
-            while (chars.Count < numberOfChars)
+            while (chars.Length < numberOfChars)
             {
                 double mid;
                 if (bitsTotal % 2 == 0)
@@ -95,12 +96,12 @@ namespace NGeoHash
                 }
 
                 var code = Base32Codes[hashValue];
-                chars.Add(code);
+                chars.Append(code);
                 bits = 0;
                 hashValue = 0;
             }
 
-            return string.Join("", chars.ToArray());
+            return chars.ToString();
         }
 
         /**
@@ -363,11 +364,11 @@ namespace NGeoHash
          * @param {int[]} Direction as a 2D normalized vector.
          * @returns {string}
          */
-        public static string Neighbor(string hashString, int[] direction)
+        public static string Neighbor(string hashString, int lat, int lon)
         {
             var lonLat = Decode(hashString);
-            var neighborLat = lonLat.Coordinates.Lat + direction[0] * lonLat.Error.Lat * 2;
-            var neighborLon = lonLat.Coordinates.Lon + direction[1] * lonLat.Error.Lon * 2;
+            var neighborLat = lonLat.Coordinates.Lat + lat * lonLat.Error.Lat * 2;
+            var neighborLon = lonLat.Coordinates.Lon + lon * lonLat.Error.Lon * 2;
             return Encode(neighborLat, neighborLon, hashString.Count());
         }
 
@@ -384,11 +385,11 @@ namespace NGeoHash
          * @param {int} bitdepth
          * @returns {long}
         */
-        public static long NeighborInt(long hashInt, int[] direction, int bitDepth = 52)
+        public static long NeighborInt(long hashInt, int lat, int lon, int bitDepth = 52)
         {
             var lonlat = DecodeInt(hashInt, bitDepth);
-            var neighborLat = lonlat.Coordinates.Lat + direction[0] * lonlat.Error.Lat * 2;
-            var neighborLon = lonlat.Coordinates.Lon + direction[1] * lonlat.Error.Lon * 2;
+            var neighborLat = lonlat.Coordinates.Lat + lat * lonlat.Error.Lat * 2;
+            var neighborLon = lonlat.Coordinates.Lon + lon * lonlat.Error.Lon * 2;
             return EncodeInt(neighborLat, neighborLon, bitDepth);
         }
 
@@ -522,7 +523,7 @@ namespace NGeoHash
             {
                 for (var lon = 0; lon <= lonStep; lon++)
                 {
-                    hashList.Add(Neighbor(hashSouthWest, new[] {lat, lon}));
+                    hashList.Add(Neighbor(hashSouthWest, lat, lon));
                 }
             }
             return hashList.ToArray();
@@ -564,7 +565,7 @@ namespace NGeoHash
             {
                 for (var lon = 0; lon <= lonStep; lon++)
                 {
-                    hashList.Add(NeighborInt(hashSouthWest, new[] {lat, lon}, bitDepth));
+                    hashList.Add(NeighborInt(hashSouthWest, lat, lon, bitDepth));
                 }
             }
             return hashList.ToArray();
